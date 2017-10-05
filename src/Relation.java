@@ -28,10 +28,22 @@ public class Relation {
     }
     return newAttribute;
   }
+  public Attribute addAttribute(Attribute newAttribute) {
+    listAttributes.add(newAttribute)
+    ListIterator<Tuple> tupleListIterator = listTuples.listIterator();
+    while (tupleListIterator.hasNext()) {
+      tupleListIterator.next().addAttribute(newAttribute);
+    }
+    return newAttribute;
+  }
   public Tuple insertTuple(Tuple newTuple) {
     newTuple.assignTupleNum(tupleNum);
     listTuples.add(newTuple);
     tupleNum++;
     return newTuple;
+  }
+
+  public Relation changeRelationName(String relationName) {
+    this.relationName = relationName;
   }
 }
