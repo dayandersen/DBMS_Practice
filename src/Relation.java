@@ -5,10 +5,10 @@ import java.util.ListIterator;
  * Created by ander612 on 10/4/17.
  */
 public class Relation {
-  String relationName;
-  LinkedList<Tuple> listTuples = new LinkedList<Tuple>();
-  LinkedList<Attribute> listAttributes = new LinkedList<Attribute>();
-  Integer tupleNum;
+  private String relationName;
+  private LinkedList<Tuple> listTuples = new LinkedList<Tuple>();
+  private LinkedList<Attribute> listAttributes = new LinkedList<Attribute>();
+  private int tupleNum;
 
   public Relation() {
     this.tupleNum = 0;
@@ -20,22 +20,28 @@ public class Relation {
   }
 
   public Attribute addAttribute(String attributeType, String attributeName, Integer attributeSize) {
-    Attribute newAttribute = new Attribute(attributeType, attributeName, attributeSize)
+    Attribute newAttribute = new Attribute(attributeType, attributeName, attributeSize);
     listAttributes.add(newAttribute);
     ListIterator<Tuple> tupleListIterator = listTuples.listIterator();
+    
     while (tupleListIterator.hasNext()) {
       tupleListIterator.next().addAttribute(newAttribute);
     }
+    
     return newAttribute;
   }
+  
   public Attribute addAttribute(Attribute newAttribute) {
-    listAttributes.add(newAttribute)
+    listAttributes.add(newAttribute);
     ListIterator<Tuple> tupleListIterator = listTuples.listIterator();
+    
     while (tupleListIterator.hasNext()) {
       tupleListIterator.next().addAttribute(newAttribute);
     }
+    
     return newAttribute;
   }
+  
   public Tuple insertTuple(Tuple newTuple) {
     newTuple.assignTupleNum(tupleNum);
     listTuples.add(newTuple);
@@ -43,7 +49,7 @@ public class Relation {
     return newTuple;
   }
 
-  public Relation changeRelationName(String relationName) {
+  public void changeRelationName(String relationName) {
     this.relationName = relationName;
   }
 }

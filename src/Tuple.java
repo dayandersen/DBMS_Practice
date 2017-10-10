@@ -4,8 +4,8 @@ import java.util.LinkedList;
  * Created by ander612 on 10/4/17.
  */
 public class Tuple {
-  LinkedList<Attribute> attributeList = new LinkedList<Attribute>();
-  Integer tupleNum;
+  private LinkedList<Attribute> attributeList = new LinkedList<Attribute>();
+  private Integer tupleNum;
 
   public Tuple() {}
 
