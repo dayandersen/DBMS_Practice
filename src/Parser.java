@@ -1,87 +1,105 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.LinkedList;
+import java.util.NoSuchElementException;
+import java.util.Queue;
 import java.util.Scanner;
 
 public class Parser {
+
+  private Scanner fileScan;
+  private Scanner cmdScan;
+  private Queue<String> queue;
   
-  private Scanner scan;
-  
-  public Parser() {
-    scan = new Scanner(System.in);
-    scan.useDelimiter("");
-  }
+  private boolean inComment;
   
   public Parser(File in) throws FileNotFoundException {
-    scan = new Scanner(in);
-    scan.useDelimiter("");
+    fileScan = new Scanner(in);
+    fileScan.useDelimiter(";");
+    queue = new LinkedList<String>();
+  }
+  
+  private Scanner initCmdScanner(String cmd) {
+    cmdScan = new Scanner(cmd);
+    cmdScan.useDelimiter(" ");
+    return cmdScan;
+  }
+  
+  /* Checks for the end of the command before returning the symbol.
+   * If at the end, we'll want to enqueue a semicolon to be returned next. */
+  private String returnSymbol(String symbol) {
+    if (!symbol.equals(";") && !cmdScan.hasNext() && queue.isEmpty()) {
+      queue.add(";");
+    }
+    return symbol;
   }
   
   public String nextSymbol() {
-    StringBuilder symbol = new StringBuilder();
-    String token = nextChar();
-    boolean inQuote = false;
-    boolean inParen = false;
-    
-    // End of input
-    if (token == null) {
-      return null;
+    /* Return items from the queue before continuing to parse */
+    if (queue.size() > 0) {
+      return returnSymbol(queue.remove());
     }
     
-    // If the first token is a space, ignore it and go to the next symbol
-    if (token.equals(" ")) {
+    /* Handle edge cases (first and last calls) */
+    if (cmdScan == null || !cmdScan.hasNext()) {
+      if (fileScan.hasNext()) {
+        // Start parsing the next command
+        cmdScan = initCmdScanner(fileScan.next());
+      } else {
+        // End of input
+        return null; 
+      }
+    }
+    
+    /* Get the next raw symbol */
+    String symbol = cmdScan.next();
+    
+    /* Remove newlines & carriage returns */
+    symbol = symbol.replaceAll("\n|\r|,", "");
+    
+    /* Skip blanks */
+    if (symbol.equals("")) {
       return nextSymbol();
     }
     
-    loop:
-    while (token != null) {
-      // Break on spaces unless inside quotes or parentheses
-      if (!inQuote && !inParen && token.equals(" ")) {
-        break;
-      }
-      
-      switch (token) {
-      case "/": if (nextChar().equals("*"))
-                  findSymbol("*/"); 
-                return nextSymbol();
-      case "'": inQuote = !inQuote; break;
-      case "(": inParen = true; break;
-      case ")": inParen = false; break;
-      case ";": break loop;
-      case ",": if (!inParen && !inQuote) break;
-      default: symbol.append(token);
-      }
-      
-      token = nextChar();
+    /* Ignore comments */
+    if (symbol.equals("/*")) {
+      inComment = true;
     }
-    
-    System.out.print("[" + symbol.toString() + "]");
-    return symbol.toString();
-  }
-  
-  private String nextChar() {
-    if (!scan.hasNext()) {
-       //System.out.println();
-      return null;
-    }
-    
-    String next = scan.next();
-    if (next.equals("\n") || next.equals("\r")) {
-      return "";
-    }
-    
-    //System.out.print(next);
-    return next;
-  }
-  
-  private boolean findSymbol(String symbol) {
-    String next;
-    do {
-      next = nextSymbol();
-      if (next.equals("")) {
-        return false;
+    if (inComment) {
+      if (symbol.equals("*/")) {
+        inComment = false;
       }
-    } while (!symbol.equals(next));
-    return true;
-  }
+      return nextSymbol();
+    }
 
+    /* Handle single-quotes */
+    if (symbol.startsWith("'")) {
+      cmdScan.useDelimiter("'");
+      try {
+        // Capture the entire quotation
+        String quote = symbol + cmdScan.next() + "'";
+        
+        // Consume the closing quote
+        cmdScan.skip("'");
+        
+        cmdScan.useDelimiter(" ");
+        return returnSymbol(quote);
+        
+      } catch (NoSuchElementException e) {
+        return "Error: mismatched quote";
+      }
+    }
+    
+    /* Handle parentheses */
+    if (symbol.length() > 1 && symbol.startsWith("(")) {
+      queue.add(symbol.substring(1));
+      return returnSymbol("(");
+    } else if (symbol.length() > 1 && symbol.endsWith(")")) {
+      queue.add(")");
+      return returnSymbol(symbol.substring(0, symbol.length()-1));
+    }
+    
+    return returnSymbol(symbol);
+  }
 }

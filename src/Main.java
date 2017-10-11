@@ -19,9 +19,13 @@ public class Main {
       return;
     }
     
-    String symbol;
-    do {
+    String symbol = parser.nextSymbol();
+    while (symbol != null) {
+      System.out.print("[" + symbol + "]");
+      if (symbol.equals(";")) {
+        System.out.println();
+      }
       symbol = parser.nextSymbol();
-    } while (symbol != null);
+    }
   }
 }
